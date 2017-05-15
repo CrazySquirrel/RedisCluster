@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es2015",
+    "lib": ["es2016", "dom"],
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "declaration": true
+  },
+  "files": [
+    "./lib/RedisCluster.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "typings"
+  ]
+}

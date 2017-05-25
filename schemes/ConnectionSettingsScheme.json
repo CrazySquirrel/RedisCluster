@@ -4,33 +4,41 @@
   "properties": {
     "port": {
       "type": "number",
-      "title" : "Port",
-      "description" : "Redis connection port"
+      "minimum": 0,
+      "maximum": 65536,
+      "title": "Port",
+      "description": "Redis connection port"
     },
     "host": {
       "type": "string",
-      "title" : "Host",
-      "description" : "Redis connection host"
+      "title": "Host",
+      "description": "Redis connection host"
     },
     "name": {
       "type": "string",
-      "title" : "Name",
-      "description" : "Redis user name"
+      "title": "Name",
+      "description": "Redis user name"
     },
     "password": {
       "type": "string",
-      "title" : "Password",
-      "description" : "Redis user password"
+      "title": "Password",
+      "description": "Redis user password"
     },
     "family": {
       "type": "number",
-      "title" : "Family",
-      "description" : "Redis ip family id"
+      "enum": [
+        4,
+        6
+      ],
+      "title": "Family",
+      "description": "Redis ip family id"
     },
     "db": {
       "type": "number",
-      "title" : "DB",
-      "description" : "Redis database id"
+      "minimum": 0,
+      "maximum": 100,
+      "title": "DB",
+      "description": "Redis database id"
     }
   },
   "required": [
@@ -42,6 +50,12 @@
   "default": {
     "port": 6379,
     "host": "127.0.0.1",
+    "family": 4,
+    "db": 0
+  },
+  "default": {
+    "port": 6379,
+    "host": "0.0.0.0",
     "family": 4,
     "db": 0
   }

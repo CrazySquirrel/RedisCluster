@@ -33,7 +33,7 @@
     "production": "NODE_ENV=production webpack --bail --config=webpack.build.config.js",
     "production:watch": "NODE_ENV=production:watch webpack --config=webpack.build.config.js --watch",
     "production:stat": "NODE_ENV=production:stat webpack --config=webpack.build.config.js",
-    "test": "npm run redis & npm run test:prepare && npm run test:execute",
+    "test": "npm run test:prepare && npm run test:execute",
     "test:prepare": "NODE_ENV=test webpack --config=webpack.test.config.js",
     "test:execute": "rm -rf ./doc/report/ && NODE_ENV=test nyc jasmine ./spec/RedisCluster.spec.js",
     "redis": "redis-server",
@@ -64,6 +64,7 @@
     }
   },
   "dependencies": {
+    "crypto-js": "^3.1.9-1",
     "hiredis": "^0.5.0",
     "ioredis": "^2.5.0",
     "jsonschema": "^1.1.1"

@@ -1,20 +1,18 @@
 /**
  * Require redis connection settings interface
  */
-import IConnectionSettings from "../interfaces/IConnectionSettings";
+import ISettings from "../interfaces/ISettings";
 export default class RedisCluster {
-    private clients;
-    constructor(connectionSettings?: IConnectionSettings[]);
+    private Settings;
+    private Nodes;
+    private Client;
+    private Stack;
+    constructor(Settings?: ISettings);
     /**
-     * Get active clients count
+     * Get nodes
      * @return {any}
      */
-    getActiveClientsCount(): number;
-    /**
-     * Get active clients
-     * @return {any[]}
-     */
-    getActiveClients(): any;
+    getNodes(): any;
     /**
      * Set value
      * @param key
@@ -43,10 +41,30 @@ export default class RedisCluster {
      */
     expireat(key: string, time: number): Promise<any>;
     /**
-     * Prepare connection settings
-     * @param _connectionSettings
-     * @param connectionSetting
-     * @return {any}
+     * Set value
+     * @param key
+     * @param value
+     * @param time
+     * @return {Promise<any>}
      */
-    private prepareConnectionSettings(_connectionSettings, connectionSetting);
+    private _set(key, value, time);
+    /**
+     * Get value
+     * @param key
+     * @return {Promise<any>}
+     */
+    private _get(key);
+    /**
+     * Delete value
+     * @param key
+     * @return {Promise<any>}
+     */
+    private _del(key);
+    /**
+     * Set value expireat
+     * @param key
+     * @param time
+     * @return {Promise<any>}
+     */
+    private _expireat(key, time);
 }

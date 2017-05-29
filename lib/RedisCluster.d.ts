@@ -13,6 +13,7 @@ export default class RedisCluster {
      * @return {any}
      */
     getNodes(): any;
+    getActiveNodes(): any;
     /**
      * Set value
      * @param key

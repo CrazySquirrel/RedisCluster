@@ -8,5 +8,6 @@ interface IConnectionSettings {
     password?: string;
     family: number;
     db: number;
+    showFriendlyErrorStack?: boolean;
 }
 export default IConnectionSettings;

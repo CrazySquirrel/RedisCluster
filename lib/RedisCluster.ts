@@ -61,15 +61,6 @@ export default class RedisCluster {
                 ) &&
                 typeof ConnectionSettingsScheme.default[key] !== "undefined"
             ) {
-              /*console.log([
-               ``,
-               `The key "${key}" was automatically changed in the settings:`,
-               `${JSON.stringify(connectionSettings)}`,
-               `from ${connectionSettings[key]} to ${ConnectionSettingsScheme.default[key]}`,
-               `because it was invalid according to the rules:`,
-               `${JSON.stringify(ConnectionSettingsScheme.properties[key])}`,
-               ``,
-               ].join("\r\n"));*/
               connectionSettings[key] = ConnectionSettingsScheme.default[key];
             }
           }
@@ -79,7 +70,11 @@ export default class RedisCluster {
        * Validate nodes
        */
       if (ConnectionSettingsScheme.required.every((key) => typeof connectionSettings[key] !== "undefined")) {
+
         const connectionSettingsID = MD5(JSON.stringify(connectionSettings)).toString();
+
+        connectionSettings.showFriendlyErrorStack = false;
+
         if (!this.Nodes[connectionSettingsID]) {
           this.Nodes[connectionSettingsID] = {
             Stack: [],
@@ -155,6 +150,16 @@ export default class RedisCluster {
    */
   public getNodes(): any {
     return this.Nodes;
+  }
+
+  public getActiveNodes(): any {
+    const nodes = {};
+    Object.keys(this.Nodes).forEach((k) => {
+      if (this.Nodes[k].Client.status === "ready") {
+        nodes[k] = this.Nodes[k];
+      }
+    });
+    return nodes;
   }
 
   /**

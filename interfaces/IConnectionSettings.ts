@@ -9,6 +9,7 @@ interface IConnectionSettings {
   password?: string;
   family: number;
   db: number;
+  showFriendlyErrorStack?: boolean;
 }
 /**
  * Export the redis connection scheme interface

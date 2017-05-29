@@ -7,8 +7,6 @@ const redis = require("ioredis");
 
 const exec = require("child_process").exec;
 
-const MD5 = require("crypto-js/md5");
-
 declare let describe: any;
 declare let it: any;
 declare let expect: any;
@@ -60,6 +58,12 @@ const CorruptedConnectionSettings: any = {
       family: 4,
       db: -1,
     },
+    {
+      port: 32772,
+      host: "127.0.0.1",
+      family: 4,
+      db: 0,
+    },
     {},
   ],
 };
@@ -79,24 +83,16 @@ const NormalConnectionSettings: any = {
       db: 1,
     },
     {
-      port: 6379,
+      port: 32772,
       host: "127.0.0.1",
       family: 4,
-      db: 2,
+      db: 0,
     },
   ],
 };
 
-const Clients: any = {};
-
-NormalConnectionSettings.Nodes.forEach((settings) => {
-  const ID = MD5(JSON.stringify(settings)).toString();
-  if (!Clients[ID]) {
-    Clients[ID] = new redis(settings);
-  }
-});
-
 describe("RedisCluster", () => {
+  jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
 
   const key = Math.random().toString(36).replace(/[^a-z]+/g, "");
   const values = Math.random().toString(36).replace(/[^a-z]+/g, "");
@@ -108,7 +104,7 @@ describe("RedisCluster", () => {
         expect(typeof(result)).toEqual("object", "Set: result not an object");
         expect(Array.isArray(result)).toEqual(true, "Set: result not an array");
         expect((
-            result.length === count &&
+            result.filter((v) => v !== null).length === count &&
             (
                 count === 0 ||
                 (
@@ -131,7 +127,7 @@ describe("RedisCluster", () => {
         expect(typeof(result)).toEqual("object", "Set: result not an object");
         expect(Array.isArray(result)).toEqual(true, "Set: result not an array");
         expect((
-            result.length === count &&
+            result.filter((v) => v !== null).length === count &&
             (
                 count === 0 ||
                 (
@@ -180,7 +176,7 @@ describe("RedisCluster", () => {
         expect(typeof(result)).toEqual("object", "Del: result not an object");
         expect(Array.isArray(result)).toEqual(true, "Del: result not an array");
         expect((
-            result.length === count &&
+            result.filter((v) => v !== null).length === count &&
             (
                 count === 0 ||
                 (
@@ -203,7 +199,7 @@ describe("RedisCluster", () => {
         expect(typeof(result)).toEqual("object", "Expireat: result not an object");
         expect(Array.isArray(result)).toEqual(true, "Expireat: result not an array");
         expect((
-            result.length === count &&
+            result.filter((v) => v !== null).length === count &&
             (
                 count === 0 ||
                 (
@@ -234,69 +230,86 @@ describe("RedisCluster", () => {
 
   const test = (RedisClusterClient, done, flag) => {
     process([
-      set(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-      get(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-      set(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-      get2(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-      set(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-      del(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-      set2(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-      expireat(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
+      set(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+      get(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+      set(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+      get2(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+      set(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+      del(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+      set2(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+      expireat(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
     ]);
 
     if (flag) {
       setTimeout(() => {
         process([
-          set(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, false),
-          get(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, false),
-          set(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, false),
-          get2(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-          set(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, true),
-          del(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, false),
-          set2(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, false),
-          expireat(RedisClusterClient, Object.keys(RedisClusterClient.getNodes()).length, false),
+          set(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, false),
+          get(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, false),
+          set(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, false),
+          get2(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+          set(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, true),
+          del(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, false),
+          set2(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, false),
+          expireat(RedisClusterClient, Object.keys(RedisClusterClient.getActiveNodes()).length, false),
         ]).then(done).catch(done);
-      }, 1000);
+      }, 5000);
     } else {
       done();
     }
   };
 
-  it("RedisCluster class exist", () => {
-    expect(typeof(RedisCluster)).toEqual("function", "RedisCluster not a constructor");
-    expect(typeof(new RedisCluster())).toEqual("object", "RedisCluster not a constructor");
+  it("RedisCluster class exist", (done) => {
+    exec("npm run redis");
+    setTimeout(() => {
+      expect(typeof(RedisCluster)).toEqual("function", "RedisCluster not a constructor");
+      expect(typeof(new RedisCluster())).toEqual("object", "RedisCluster not a constructor");
+      done();
+    }, 5000);
   });
 
   it("RedisCluster correctly handle empty input parameters", (done) => {
-    const RedisClusterClient = new RedisCluster();
-    expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
-    expect(Object.keys(RedisClusterClient.getNodes()).length).toEqual(0);
-    test(RedisClusterClient, done, true);
+    exec("npm run redis");
+    setTimeout(() => {
+      const RedisClusterClient = new RedisCluster();
+      expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
+      expect(Object.keys(RedisClusterClient.getNodes()).length).toEqual(0);
+      test(RedisClusterClient, done, true);
+    }, 5000);
   });
 
   it("RedisCluster correctly handles corrupted input parameters", (done) => {
-    const RedisClusterClient = new RedisCluster(CorruptedConnectionSettings);
-    expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
-    test(RedisClusterClient, done, true);
+    exec("npm run redis");
+    setTimeout(() => {
+      const RedisClusterClient = new RedisCluster(CorruptedConnectionSettings);
+      expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
+      test(RedisClusterClient, done, true);
+    }, 5000);
   });
 
   it("RedisCluster correctly handles normal input parameters", (done) => {
-    const RedisClusterClient = new RedisCluster(CorruptedConnectionSettings);
-    expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
-    test(RedisClusterClient, done, true);
+    exec("npm run redis");
+    setTimeout(() => {
+      const RedisClusterClient = new RedisCluster(NormalConnectionSettings);
+      expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
+      test(RedisClusterClient, done, true);
+    }, 5000);
   });
 
   it("RedisCluster correctly handles db error", (done) => {
     exec("redis-cli shutdown");
-    const RedisClusterClient = new RedisCluster(CorruptedConnectionSettings);
-    expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
-    test(RedisClusterClient, done, false);
+    setTimeout(() => {
+      const RedisClusterClient = new RedisCluster(NormalConnectionSettings);
+      expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
+      test(RedisClusterClient, done, false);
+    }, 5000);
   });
 
   it("RedisCluster correctly handles db reconnection", (done) => {
-    exec("redis-server");
-    const RedisClusterClient = new RedisCluster(CorruptedConnectionSettings);
-    expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
-    test(RedisClusterClient, done, true);
+    exec("npm run redis");
+    setTimeout(() => {
+      const RedisClusterClient = new RedisCluster(NormalConnectionSettings);
+      expect(typeof(RedisClusterClient.getNodes())).toEqual("object");
+      test(RedisClusterClient, done, false);
+    }, 5000);
   });
 });
